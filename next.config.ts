@@ -1,11 +1,5 @@
- import type { NextConfig } from "next";
-  import path from "path";
+import type { NextConfig } from "next";
 
-  const nextConfig: NextConfig = {
-    serverExternalPackages: ["sql.js"],
-    outputFileTracingIncludes: {
-      "/api/**/*": ["./node_modules/sql.js/dist/sql-wasm.wasm"],
-    },
-  };
+const nextConfig: NextConfig = {};
 
-  export default nextConfig;
+export default nextConfig;

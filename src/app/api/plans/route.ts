@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import type { NextRequest } from "next/server";
+import type { InValue } from "@libsql/client";
 
 export async function GET(request: NextRequest) {
   const db = await getDb();
@@ -15,7 +16,7 @@ export async function GET(request: NextRequest) {
     JOIN articles a ON sp.article_id = a.article_id
     WHERE 1=1
   `;
-  const params: (string | number)[] = [];
+  const params: InValue[] = [];
 
   if (articleId) {
     query += " AND sp.article_id = ?";
@@ -31,9 +32,8 @@ export async function GET(request: NextRequest) {
 
   query += " ORDER BY sp.production_start ASC";
 
-  const plans = db.prepare(query).all(...params);
+  const plans = await db.prepare(query).all(...params);
 
-  // Convert is_overridden from 0/1 to boolean
   const mapped = (plans as Record<string, unknown>[]).map((p) => ({
     ...p,
     is_overridden: p.is_overridden === 1,

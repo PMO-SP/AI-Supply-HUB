@@ -24,13 +24,12 @@ export async function GET() {
   const today = new Date();
   today.setHours(0, 0, 0, 0);
 
-  const payments = db
+  const payments = (await db
     .prepare("SELECT * FROM payments ORDER BY due_date ASC")
-    .all() as Payment[];
+    .all()) as Payment[];
 
   const withDunning = payments.map((p) => computeDunning(p, today));
 
-  // Sort: overdue first (by days_overdue desc), then by due_date asc
   withDunning.sort((a, b) => {
     if (a.status === "paid" && b.status !== "paid") return 1;
     if (a.status !== "paid" && b.status === "paid") return -1;

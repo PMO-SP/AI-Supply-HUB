@@ -4,10 +4,8 @@ import type { DelayByMonth } from "@/lib/types";
 
 export async function GET() {
   const db = await getDb();
-
-  const delays = db
+  const delays = (await db
     .prepare("SELECT * FROM delay_by_month ORDER BY year ASC, month ASC")
-    .all() as DelayByMonth[];
-
+    .all()) as DelayByMonth[];
   return NextResponse.json({ success: true, data: delays });
 }
