@@ -3,23 +3,20 @@ import path from "path";
 import type { Article, Forecast, StockLevel, MonthlyPerformance, SeasonalityEntry, Supplier, Payment, PaymentType, PaymentMethod, PaymentStatus, Stockout, StockoutStatus, DelayByMonth, SalesAction, SalesActionType, InboundOrder, ETDStatus, GoodsOnTheWay, InProduction } from "./types";
 
 function getAuth() {
-  const keyPath = process.env.GOOGLE_SERVICE_ACCOUNT_KEY_PATH;
-  if (!keyPath) {
-    throw new Error("GOOGLE_SERVICE_ACCOUNT_KEY_PATH is not set in .env.local");
+  const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
+  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+
+  if (!email || !privateKey) {
+    throw new Error("Google credentials missing in environment variables");
   }
 
   return new google.auth.GoogleAuth({
-    keyFile: path.resolve(keyPath),
+    credentials: {
+      client_email: email,
+      private_key: privateKey,
+    },
     scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
   });
-}
-
-function getSheetId(): string {
-  const id = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
-  if (!id) {
-    throw new Error("GOOGLE_SHEETS_SPREADSHEET_ID is not set in .env.local");
-  }
-  return id;
 }
 
 /**
