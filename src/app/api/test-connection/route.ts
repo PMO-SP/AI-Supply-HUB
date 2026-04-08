@@ -22,7 +22,7 @@ export async function GET() {
   }
 
   // Step 2: Auth-Init
-  let auth: ReturnType<typeof google.auth.GoogleAuth.prototype.constructor>;
+  let auth: InstanceType<typeof google.auth.GoogleAuth>;
   try {
     auth = new google.auth.GoogleAuth({
       credentials: {
