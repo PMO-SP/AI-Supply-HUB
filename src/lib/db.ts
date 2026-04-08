@@ -26,7 +26,8 @@ let sqlPromise: ReturnType<typeof initSqlJs> | null = null;
 function getSql() {
   if (!sqlPromise) {
     sqlPromise = initSqlJs({
-      locateFile: () => "/sql-wasm.wasm",
+      locateFile: () =>
+        path.join(process.cwd(), "node_modules/sql.js/dist/sql-wasm.wasm"),
     });
   }
   return sqlPromise;
