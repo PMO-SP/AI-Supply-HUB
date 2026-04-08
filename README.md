@@ -33,7 +33,8 @@ Sportstech importiert Fitnessgeräte aus China per Container. Das AI Supply Hub 
 | Framework | Next.js 15 (App Router) |
 | Sprache | TypeScript |
 | Styling | Tailwind CSS |
-| Datenbank | sql.js (WASM-based SQLite) |
+| Datenbank | Turso (libSQL / SQLite, hosted) |
+| DB-Client | @libsql/client |
 | Datenquelle | Google Sheets API v4 (Service Account) |
 | Data Fetching | SWR |
 | Hosting | Vercel |
@@ -47,6 +48,7 @@ Sportstech importiert Fitnessgeräte aus China per Container. Das AI Supply Hub 
 - npm
 - Google Cloud Projekt mit aktivierter Sheets API
 - Service Account mit Lesezugriff auf das Spreadsheet
+- Turso-Account mit einer Datenbank (kostenloser Starter-Plan reicht)
 
 ### Setup
 
@@ -61,11 +63,17 @@ npm install
 # 3. Environment Variables einrichten
 cp .env.example .env.local
 # Werte eintragen (Keys bei PMO anfragen)
+# Benötigt: TURSO_DATABASE_URL, TURSO_AUTH_TOKEN, Google Sheets Credentials
 
-# 4. Service Account JSON ablegen
+# 4. Turso Datenbank einrichten (einmalig)
+# → https://turso.tech → Account erstellen → DB anlegen → URL + Token kopieren
+# turso db create ai-supply-hub
+# turso db tokens create ai-supply-hub
+
+# 5. Service Account JSON ablegen
 # service-account.json ins Projekt-Root kopieren (NICHT committen!)
 
-# 5. Dev Server starten
+# 6. Dev Server starten
 npm run dev
 ```
 
@@ -129,6 +137,15 @@ Setup-Anleitung: [docs/deployment.md](docs/deployment.md)
 ## Environment Variables
 
 Alle benötigten Keys sind in `.env.example` dokumentiert.
+
+| Variable | Beschreibung |
+|----------|-------------|
+| `TURSO_DATABASE_URL` | libSQL-URL der Turso-Datenbank (`libsql://...`) |
+| `TURSO_AUTH_TOKEN` | Auth-Token für Turso-Datenbankzugriff |
+| `GOOGLE_SERVICE_ACCOUNT_EMAIL` | E-Mail des Google Service Accounts |
+| `GOOGLE_PRIVATE_KEY` | Private Key des Service Accounts |
+| `GOOGLE_SHEETS_SPREADSHEET_ID` | ID des Google Spreadsheets |
+
 Niemals `.env.local` oder `service-account.json` committen — beide sind in `.gitignore`.
 
 ---
