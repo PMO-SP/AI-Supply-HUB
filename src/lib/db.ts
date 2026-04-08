@@ -65,7 +65,10 @@ export async function getDb(): Promise<Db> {
       // Turso handles this automatically
     },
     async batch(statements) {
-      await c.batch(statements, "write");
+      await c.batch(
+        statements.map((s) => ({ sql: s.sql, args: s.args ?? [] })),
+        "write"
+      );
     },
     save() {
       // No-op: Turso persists automatically
