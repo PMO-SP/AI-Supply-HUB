@@ -95,6 +95,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
     statements.push({ sql: "DELETE FROM monthly_performance" });
     statements.push({ sql: "DELETE FROM stock_levels" });
     statements.push({ sql: "DELETE FROM forecasts" });
+    statements.push({ sql: "DELETE FROM overrides" });
     statements.push({ sql: "DELETE FROM payments" });
     statements.push({ sql: "DELETE FROM articles" });
     statements.push({ sql: "DELETE FROM suppliers" });
@@ -112,6 +113,15 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       statements.push({
         sql: "INSERT OR REPLACE INTO articles (article_id, article_name, category, units_per_container, production_lead_time_days, transit_lead_time_days) VALUES (?, ?, ?, ?, ?, ?)",
         args: [a.article_id, a.article_name, a.category, a.units_per_container, a.production_lead_time_days, a.transit_lead_time_days],
+      });
+    }
+
+    // Overrides (references articles — re-insert only valid ones)
+    const validOverrides = overrides.filter((o) => articleIds.has(o.article_id));
+    for (const o of validOverrides) {
+      statements.push({
+        sql: "INSERT OR REPLACE INTO overrides (article_id, year, month, field, original_value, override_value, reason, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [o.article_id, o.year, o.month, o.field, o.original_value, o.override_value, o.reason, o.created_at, o.updated_at],
       });
     }
 
