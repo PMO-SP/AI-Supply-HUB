@@ -41,7 +41,7 @@ export async function POST(request: NextRequest) {
 
   const currentPlan = await db
     .prepare("SELECT * FROM shipment_plans WHERE article_id = ? AND year = ? AND month = ?")
-    .get(article_id, year, month);
+    .get(article_id, year, month) as Record<string, unknown> | undefined;
 
   const originalValue = currentPlan ? String(currentPlan[field] ?? "") : "";
 
@@ -75,16 +75,21 @@ export async function DELETE(request: NextRequest) {
 async function recomputePlans(db: Db) {
   const [articles, forecasts, overrides, stockLevels, performance, seasonalityData] =
     await Promise.all([
-      db.prepare("SELECT * FROM articles").all() as Promise<Article[]>,
-      db.prepare("SELECT * FROM forecasts").all() as Promise<Forecast[]>,
-      db.prepare("SELECT * FROM overrides").all() as Promise<Override[]>,
-      db.prepare("SELECT * FROM stock_levels").all() as Promise<StockLevel[]>,
-      db.prepare("SELECT * FROM monthly_performance").all() as Promise<MonthlyPerformance[]>,
-      db.prepare("SELECT * FROM seasonality").all() as Promise<SeasonalityEntry[]>,
+      db.prepare("SELECT * FROM articles").all(),
+      db.prepare("SELECT * FROM forecasts").all(),
+      db.prepare("SELECT * FROM overrides").all(),
+      db.prepare("SELECT * FROM stock_levels").all(),
+      db.prepare("SELECT * FROM monthly_performance").all(),
+      db.prepare("SELECT * FROM seasonality").all(),
     ]);
 
   const plans = computeShipmentPlans({
-    articles, forecasts, overrides, stockLevels, performance, seasonality: seasonalityData,
+    articles: articles as unknown as Article[],
+    forecasts: forecasts as unknown as Forecast[],
+    overrides: overrides as unknown as Override[],
+    stockLevels: stockLevels as unknown as StockLevel[],
+    performance: performance as unknown as MonthlyPerformance[],
+    seasonality: seasonalityData as unknown as SeasonalityEntry[],
   });
 
   const statements: { sql: string; args?: InValue[] }[] = [

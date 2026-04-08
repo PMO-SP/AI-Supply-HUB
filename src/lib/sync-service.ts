@@ -54,7 +54,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       fetchInProduction(),
     ]);
 
-    const overrides = (await db.prepare("SELECT * FROM overrides").all()) as Override[];
+    const overrides = (await db.prepare("SELECT * FROM overrides").all()) as unknown as Override[];
 
     const plans = computeShipmentPlans({
       articles, forecasts, overrides, stockLevels, performance, seasonality,

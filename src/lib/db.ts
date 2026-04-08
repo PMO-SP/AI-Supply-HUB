@@ -1,8 +1,8 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
 
 export interface PreparedResult {
-  all(...params: InValue[]): Promise<Record<string, unknown>[]>;
-  get(...params: InValue[]): Promise<Record<string, unknown> | undefined>;
+  all(...params: InValue[]): Promise<unknown[]>;
+  get(...params: InValue[]): Promise<unknown>;
   run(...params: InValue[]): Promise<void>;
 }
 
@@ -44,11 +44,11 @@ export async function getDb(): Promise<Db> {
   return {
     prepare(sql: string): PreparedResult {
       return {
-        async all(...params: InValue[]) {
+        async all(...params: InValue[]): Promise<unknown[]> {
           const result = await c.execute({ sql, args: params });
           return rowsToObjects(result.columns, result.rows as ArrayLike<InValue>[]);
         },
-        async get(...params: InValue[]) {
+        async get(...params: InValue[]): Promise<unknown> {
           const result = await c.execute({ sql, args: params });
           if (result.rows.length === 0) return undefined;
           return rowsToObjects(result.columns, result.rows as ArrayLike<InValue>[])[0];

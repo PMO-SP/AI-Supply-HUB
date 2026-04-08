@@ -26,7 +26,7 @@ export async function GET() {
   today.setHours(0, 0, 0, 0);
   const stockouts = (await db
     .prepare("SELECT * FROM stockouts ORDER BY available_from_date ASC")
-    .all()) as Stockout[];
+    .all()) as unknown as Stockout[];
   const withUrgency = stockouts.map((s) => computeUrgency(s, today));
   return NextResponse.json({ success: true, data: withUrgency });
 }

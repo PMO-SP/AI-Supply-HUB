@@ -7,7 +7,7 @@ export async function GET() {
     const db = await getDb();
     const rows = (await db
       .prepare("SELECT * FROM inbound_orders ORDER BY eta ASC")
-      .all()) as InboundOrder[];
+      .all()) as unknown as InboundOrder[];
     return NextResponse.json({ success: true, data: rows });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);
