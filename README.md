@@ -1,214 +1,144 @@
-# Container Planner
+# AI Supply Hub
 
-A web app for planning container shipments from China to Germany. Calculates when containers need to be ordered and loaded based on monthly sales forecasts, article-specific lead times, current stock levels, dynamic safety stock, and real-time performance tracking.
+> Internes Supply Chain Management Dashboard für Sportstech — Forecast-Analyse, Inbound-Planung, Lieferantenüberwachung und Produktionstracking in einer Anwendung.
+
+[![Vercel](https://img.shields.io/badge/deployed%20on-Vercel-black)](https://vercel.com)
+[![Next.js](https://img.shields.io/badge/Next.js-15-black)](https://nextjs.org)
+[![TypeScript](https://img.shields.io/badge/TypeScript-5-blue)](https://typescriptlang.org)
+
+---
+
+## Übersicht
+
+Sportstech importiert Fitnessgeräte aus China per Container. Das AI Supply Hub vereint alle relevanten Daten — von Forecast über Zahlungen bis hin zu Lieferstatus — in einem zentralen Dashboard. Die Daten werden direkt aus Google Sheets synchronisiert und in einer lokalen SQLite-Datenbank verarbeitet.
+
+## Features
+
+- **Dashboard** — Mahnstufen-Übersicht, Container Value, Deposit Tracking mit Herstellerfilter
+- **Forecast** — Performance nach Produktkategorie (M-3, M-2, M-1), Top 10 Über-/Unterperformer, 3M Trend
+- **Sales Push / Brake** — Automatische Handlungsempfehlungen basierend auf Forecast-Erreichung
+- **Lieferverzug** — Stockouts, Verzugsquoten, Offline-Artikel
+- **Inbound Plan current** — Aktuelle Bestellungen aus Google Sheets
+- **AI Inbound Plan** — KI-basierte Container-Berechnung mit Safety Stock
+- **In Production** — Offene Bestellungen in Produktion mit Anzahlungen
+- **Goods on the Way** — Verschiffte Ware mit ETD/ETA, Warenwert, Restbetrag
+- **Hersteller Zahlungen** — Cash Flow, Mahnstufen, Vorkasse/Kreditlinie, Top 10 Lieferanten
+- **Safety Stock** — Dynamische Sicherheitsbestandsberechnung
+- **Google Sheets Sync** — 14 Sheet-Tabs parallel synchronisiert
 
 ## Tech Stack
 
-- **Frontend**: Next.js 15 + React 19 + TypeScript + Tailwind CSS
-- **Backend**: Next.js API Routes
-- **Database**: SQLite (via better-sqlite3) for local storage of plans and overrides
-- **Data Source**: Google Sheets API v4 (service account authentication)
-- **Client State**: SWR for data fetching and caching
+| Layer | Technologie |
+|-------|-------------|
+| Framework | Next.js 15 (App Router) |
+| Sprache | TypeScript |
+| Styling | Tailwind CSS |
+| Datenbank | sql.js (WASM-based SQLite) |
+| Datenquelle | Google Sheets API v4 (Service Account) |
+| Data Fetching | SWR |
+| Hosting | Vercel |
 
-## Prerequisites
+---
 
-- [Node.js](https://nodejs.org/) v18 or later
-- A Google Cloud project with Sheets API enabled
-- A Google Service Account with access to your spreadsheet
+## Lokale Entwicklung
 
-## Setup
+### Voraussetzungen
+- Node.js 20+
+- npm
+- Google Cloud Projekt mit aktivierter Sheets API
+- Service Account mit Lesezugriff auf das Spreadsheet
 
-### 1. Install Dependencies
+### Setup
 
 ```bash
-cd container-planner
+# 1. Repo klonen
+git clone https://github.com/PMO-SP/AI-Supply-HUB.git
+cd AI-Supply-HUB
+
+# 2. Dependencies installieren
 npm install
-```
 
-### 2. Google Sheets Setup
+# 3. Environment Variables einrichten
+cp .env.example .env.local
+# Werte eintragen (Keys bei PMO anfragen)
 
-#### Create the Spreadsheet
+# 4. Service Account JSON ablegen
+# service-account.json ins Projekt-Root kopieren (NICHT committen!)
 
-Create a Google Sheet with five tabs:
-
-**Tab 1 - "articles":**
-
-| article_id | article_name | units_per_container | production_lead_time_weeks | transit_lead_time_weeks |
-|---|---|---|---|---|
-| ART-001 | Widget A | 500 | 4 | 6 |
-| ART-002 | Widget B | 200 | 3 | 6 |
-
-**Tab 2 - "forecast":**
-
-| article_id | year | month | target_units |
-|---|---|---|---|
-| ART-001 | 2026 | 4 | 2000 |
-| ART-001 | 2026 | 5 | 1500 |
-| ART-002 | 2026 | 4 | 800 |
-
-**Tab 3 - "stock_levels":**
-
-| article_id | current_stock_units | last_updated |
-|---|---|---|
-| ART-001 | 800 | 2026-03-25 |
-| ART-002 | 150 | 2026-03-25 |
-
-**Tab 4 - "monthly_performance":**
-
-| article_id | year | month | actual_units_sold |
-|---|---|---|---|
-| ART-001 | 2026 | 1 | 1800 |
-| ART-001 | 2026 | 2 | 2100 |
-| ART-001 | 2026 | 3 | 1950 |
-
-**Tab 5 - "seasonality":**
-
-| article_id | month | seasonality_coefficient |
-|---|---|---|
-| ART-001 | 1 | 0.8 |
-| ART-001 | 11 | 1.2 |
-| ART-001 | 12 | 1.3 |
-
-Seasonality coefficients are manually maintained per article per month:
-- 1.0 = normal demand
-- 1.3 = 30% higher demand (e.g. holiday season)
-- 0.8 = 20% lower demand (e.g. post-holiday)
-
-#### Create a Service Account
-
-1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-2. Create a new project (or use an existing one)
-3. Enable the **Google Sheets API**
-4. Go to **IAM & Admin > Service Accounts**
-5. Click **Create Service Account**
-6. Give it a name (e.g., "container-planner")
-7. Click **Done** (no additional roles needed)
-8. Click on the new service account > **Keys** > **Add Key** > **Create new key** > **JSON**
-9. Save the downloaded JSON file as `credentials/google-service-account.json`
-
-#### Share the Spreadsheet
-
-Share your Google Sheet with the service account email address (found in the JSON key file as `client_email`). Give it **Viewer** access.
-
-### 3. Configure Environment
-
-Edit `.env.local` and fill in your values:
-
-```env
-GOOGLE_SHEETS_SPREADSHEET_ID=your-spreadsheet-id-here
-GOOGLE_SERVICE_ACCOUNT_KEY_PATH=./credentials/google-service-account.json
-DATABASE_PATH=./db/planner.db
-```
-
-The spreadsheet ID is the long string in your Google Sheet URL:
-`https://docs.google.com/spreadsheets/d/THIS_IS_THE_ID/edit`
-
-### 4. Run the App
-
-```bash
+# 5. Dev Server starten
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your browser.
+Öffne [http://localhost:3000](http://localhost:3000)
 
-### 5. Initial Sync
+### Erster Sync
 
-Click the **"Sync from Sheets"** button in the top-right corner to pull data from all 5 Google Sheet tabs and compute the shipment plan.
+Klicke auf **"Google Sheets sync"** oben rechts, um alle 14 Sheet-Tabs zu synchronisieren.
 
-## How It Works
+---
 
-### Planning Algorithm
-
-For each article and month in the forecast:
-
-1. **Stock buffer**: Subtract current stock from forecast need. If stock covers the full forecast, no container is needed.
-   - `units_needed = target_units - current_stock_units`
-2. **Safety stock**: Dynamically calculated per article per month:
-   - `Safety Stock = (avg_daily_sales x transit_days x uncertainty_factor x sell_through_multiplier) x seasonality_coefficient`
-   - **uncertainty_factor** = `1 + AVG(ABS(actual - forecast) / forecast)` over last 3-6 months
-   - **sell_through_multiplier**: fast movers (top 33%) = 1.3x, medium = 1.0x, slow (bottom 33%) = 0.8x
-   - **seasonality_coefficient**: from Sheet 5, per article per month
-3. **Total units needed** = `units_needed_after_stock + safety_stock`
-4. **Containers needed** = `CEIL(total_units_needed / units_per_container)`
-5. **Ship date** = arrival month minus `transit_lead_time_weeks`
-6. **Production start** = ship date minus `production_lead_time_weeks`
-
-### Performance Tracking (Current Month)
-
-- Compares actual sales vs. forecast for the current month
-- **Selling faster** (actual > forecast): flags "accelerate" and pulls container date 1 week earlier
-- **Selling slower** (actual < forecast): flags "delay" and pushes container date 1 week later
-- Variance % displayed on dashboard per article
-
-### Status Color Coding
-
-- **Green**: Stock sufficient, on track, no issues
-- **Yellow**: Stock running low, performance deviation > 10%, or high container count
-- **Red**: Urgent reorder needed, performance deviation > 25%, or dates in the past
-
-### Warnings
-
-The app flags issues automatically:
-- **Late Production Start**: Production must start before today but hasn't
-- **Missed Ship Date**: Ship date has already passed
-- **Urgent Reorder**: Performance deviation exceeds 25%
-- **Stock Running Low**: Stock coverage below 1 month or deviation > 10%
-- **High Container Count**: More than 10 containers needed (verify with logistics)
-
-### Views
-
-- **Timeline**: Visual 12-month calendar view with color-coded bars, stock coverage mini-bars, and performance variance badges per article
-- **Table**: Detailed table with stock & coverage column, safety stock with hover breakdown tooltip, expandable rows showing full calculation details
-- **Warnings**: Filtered view of problematic shipments with context (stock, safety stock, variance)
-
-### Safety Stock Breakdown
-
-Click any row in the Table view (or hover over the safety stock value) to see:
-- Average daily sales
-- Transit days
-- Uncertainty factor (from historical forecast error)
-- Sell-through tier (fast/medium/slow) and multiplier
-- Seasonality coefficient
-- Final safety stock result
-
-### Manual Overrides
-
-Click "Edit" on any shipment to override:
-- Container count
-- Target units
-- Ship date
-- Production start date
-
-Overrides persist across syncs. Original values are preserved for reference.
-
-## Project Structure
+## Projekt-Struktur
 
 ```
-container-planner/
-├── credentials/           # Google service account key (gitignored)
-├── db/
-│   ├── schema.sql         # SQLite table definitions (8 tables)
-│   └── planner.db         # Database file (gitignored, auto-created)
-├── src/
-│   ├── app/
-│   │   ├── api/           # API routes (sync, plans, overrides, warnings, articles, forecasts)
-│   │   ├── layout.tsx     # Root layout
-│   │   └── page.tsx       # Main page
-│   ├── components/
-│   │   ├── Dashboard.tsx       # Main dashboard with stats
-│   │   ├── TimelineView.tsx    # 12-month timeline grid
-│   │   ├── TableView.tsx       # Detailed table with expandable rows
-│   │   ├── WarningsPanel.tsx   # Warnings grouped by severity
-│   │   ├── OverrideModal.tsx   # Override dialog
-│   │   ├── SyncButton.tsx      # Sync trigger
-│   │   └── ArticleFilter.tsx   # Article dropdown filter
-│   ├── hooks/             # SWR data fetching hooks
-│   └── lib/
-│       ├── db.ts          # SQLite connection with auto-migration
-│       ├── google-sheets.ts  # Google Sheets API client (5 sheets)
-│       ├── planner.ts     # Core planning algorithm with safety stock
-│       ├── sync-service.ts   # Sync orchestration
-│       └── types.ts       # TypeScript interfaces
-├── .env.local             # Environment variables
-└── package.json
+src/
+├── app/              # Next.js App Router (Pages, Layouts, 14 API Routes)
+├── components/       # React-Komponenten (Dashboard, Views, Filter)
+├── hooks/            # SWR Data Hooks (12 Hooks)
+└── lib/              # DB, Google Sheets, Planner, Sync, Types
+db/
+└── schema.sql        # SQLite Schema (14 Tabellen)
+docs/
+├── architektur.md    # Technischer Aufbau
+└── deployment.md     # Vercel Setup
+tasks/
+├── todo.md           # Aktuelle Aufgaben
+└── lessons.md        # Gelernte Muster
 ```
+
+---
+
+## Google Sheets Tabs
+
+| # | Tab | Beschreibung |
+|---|-----|-------------|
+| 1 | articles | Artikel mit Kategorie, Laufzeiten |
+| 2 | forecasts | Monats-Forecast pro Artikel |
+| 3 | stock_levels | Aktueller Bestand |
+| 4 | monthly_performance | Performance %, M-3/M-2/M-1, 3M Trend |
+| 5 | seasonality | Saisonkoeffizienten |
+| 6 | suppliers | Lieferantenstammdaten |
+| 7 | payments | Zahlungen mit Mahnstufen |
+| 8 | stockouts | Out-of-Stock & Offline Artikel |
+| 9 | sales_actions | Aktionsempfehlungen |
+| 10 | inbound_orders | Aktuelle Bestellungen |
+| 11 | goods_on_the_way | Verschiffte Container |
+| 12 | in_production | Bestellungen in Produktion |
+| 13 | delay_by_month | Verzugsdaten pro Monat |
+| 14 | overrides | Manuelle Überschreibungen |
+
+---
+
+## Deployment
+
+Gehostet auf **Vercel**. Jeder Push auf `main` triggert automatisch ein Re-Deploy.
+
+Setup-Anleitung: [docs/deployment.md](docs/deployment.md)
+
+---
+
+## Environment Variables
+
+Alle benötigten Keys sind in `.env.example` dokumentiert.
+Niemals `.env.local` oder `service-account.json` committen — beide sind in `.gitignore`.
+
+---
+
+## Architektur
+
+Technischer Überblick: [docs/architektur.md](docs/architektur.md)
+
+---
+
+## Kontakt
+
+Bei Fragen zum Projekt oder Deployment: **PMO-SP** (GitHub)
