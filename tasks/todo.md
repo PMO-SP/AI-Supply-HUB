@@ -1,9 +1,7 @@
 # Todo — AI Supply Hub
 
 ## Aktuell
-- [ ] Vercel Deployment einrichten
-- [ ] service-account.json als Vercel Environment Variables konfigurieren
-- [ ] Domain verbinden
+
 
 ## Erledigt
 - [x] Dashboard mit Mahnstufen, Container Value, Deposit KPIs
@@ -18,3 +16,6 @@
 - [x] Datumsformat dd.mm.yyyy
 - [x] Optimierung für 14" Display
 - [x] GitHub Repo erstellt (PMO-SP/AI-Supply-HUB)
+- [x] Vercel Deployment einrichten
+- [x] service-account.json als Vercel Environment Variables konfigurieren
+- [x] Domain verbinden
