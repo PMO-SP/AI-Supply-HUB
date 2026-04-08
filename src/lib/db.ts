@@ -26,8 +26,7 @@ let sqlPromise: ReturnType<typeof initSqlJs> | null = null;
 function getSql() {
   if (!sqlPromise) {
     sqlPromise = initSqlJs({
-      locateFile: (file: string) =>
-        `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/${file}`,
+      locateFile: () => "/sql-wasm.wasm",
     });
   }
   return sqlPromise;
