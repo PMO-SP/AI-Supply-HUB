@@ -3,8 +3,7 @@ import { getDb } from "@/lib/db";
 
 export async function GET() {
   const db = await getDb();
-
-  const warnings = db
+  const warnings = await db
     .prepare(
       `SELECT sp.*, a.article_name
        FROM shipment_plans sp
@@ -21,11 +20,9 @@ export async function GET() {
          sp.production_start ASC`
     )
     .all();
-
   const mapped = (warnings as Record<string, unknown>[]).map((w) => ({
     ...w,
     is_overridden: w.is_overridden === 1,
   }));
-
   return NextResponse.json({ success: true, data: mapped });
 }

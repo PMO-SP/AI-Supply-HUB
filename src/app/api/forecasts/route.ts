@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { getDb } from "@/lib/db";
 import type { NextRequest } from "next/server";
+import type { InValue } from "@libsql/client";
 
 export async function GET(request: NextRequest) {
   const db = await getDb();
@@ -9,7 +10,7 @@ export async function GET(request: NextRequest) {
   const year = searchParams.get("year");
 
   let query = "SELECT * FROM forecasts WHERE 1=1";
-  const params: (string | number)[] = [];
+  const params: InValue[] = [];
 
   if (articleId) {
     query += " AND article_id = ?";
@@ -22,6 +23,6 @@ export async function GET(request: NextRequest) {
 
   query += " ORDER BY year, month, article_id";
 
-  const forecasts = db.prepare(query).all(...params);
+  const forecasts = await db.prepare(query).all(...params);
   return NextResponse.json({ success: true, data: forecasts });
 }

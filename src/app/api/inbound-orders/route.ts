@@ -5,10 +5,9 @@ import type { InboundOrder } from "@/lib/types";
 export async function GET() {
   try {
     const db = await getDb();
-    const rows = db
+    const rows = (await db
       .prepare("SELECT * FROM inbound_orders ORDER BY eta ASC")
-      .all() as InboundOrder[];
-
+      .all()) as InboundOrder[];
     return NextResponse.json({ success: true, data: rows });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

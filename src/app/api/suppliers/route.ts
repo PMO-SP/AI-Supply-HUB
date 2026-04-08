@@ -4,10 +4,8 @@ import type { Supplier } from "@/lib/types";
 
 export async function GET() {
   const db = await getDb();
-
-  const suppliers = db
+  const suppliers = (await db
     .prepare("SELECT * FROM suppliers ORDER BY supplier_name ASC")
-    .all() as Supplier[];
-
+    .all()) as Supplier[];
   return NextResponse.json({ success: true, data: suppliers });
 }

@@ -4,14 +4,12 @@ import { getDb } from "@/lib/db";
 
 export async function POST() {
   const result = await syncFromGoogleSheets();
-
   if (!result.success) {
     return NextResponse.json(
       { success: false, error: result.error },
       { status: 500 }
     );
   }
-
   return NextResponse.json({
     success: true,
     data: {
@@ -31,9 +29,8 @@ export async function POST() {
 
 export async function GET() {
   const db = await getDb();
-  const lastSync = db
+  const lastSync = await db
     .prepare("SELECT * FROM sync_log ORDER BY id DESC LIMIT 1")
     .get();
-
   return NextResponse.json({ success: true, data: lastSync || null });
 }

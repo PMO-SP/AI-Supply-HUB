@@ -4,7 +4,7 @@ import { getDb } from "@/lib/db";
 export async function GET() {
   try {
     const db = await getDb();
-    const rows = db
+    const rows = await db
       .prepare(
         `SELECT g.*,
                 CASE WHEN g.article_name != '' THEN g.article_name
@@ -15,7 +15,6 @@ export async function GET() {
          ORDER BY g.eta ASC`
       )
       .all();
-
     return NextResponse.json({ success: true, data: rows });
   } catch (error) {
     const message = error instanceof Error ? error.message : String(error);

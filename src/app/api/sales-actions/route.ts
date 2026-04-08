@@ -5,10 +5,9 @@ import type { SalesAction } from "@/lib/types";
 export async function GET() {
   try {
     const db = await getDb();
-    const rows = db
+    const rows = (await db
       .prepare("SELECT * FROM sales_actions ORDER BY performance_pct ASC")
-      .all() as SalesAction[];
-
+      .all()) as SalesAction[];
     return NextResponse.json({ success: true, data: rows });
   } catch (error) {
     return NextResponse.json(
