@@ -26,7 +26,7 @@ export async function GET() {
 
   const payments = (await db
     .prepare("SELECT * FROM payments ORDER BY due_date ASC")
-    .all()) as Payment[];
+    .all()) as unknown as Payment[];
 
   const withDunning = payments.map((p) => computeDunning(p, today));
 

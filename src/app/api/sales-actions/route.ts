@@ -7,7 +7,7 @@ export async function GET() {
     const db = await getDb();
     const rows = (await db
       .prepare("SELECT * FROM sales_actions ORDER BY performance_pct ASC")
-      .all()) as SalesAction[];
+      .all()) as unknown as SalesAction[];
     return NextResponse.json({ success: true, data: rows });
   } catch (error) {
     return NextResponse.json(
