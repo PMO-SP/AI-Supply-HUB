@@ -73,8 +73,25 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
 
     const statements: { sql: string; args?: InValue[] }[] = [];
 
-    // Articles
+    // --- DELETEs: children before parents (FK order) ---
+    statements.push({ sql: "DELETE FROM shipment_plans" });
+    statements.push({ sql: "DELETE FROM seasonality" });
+    statements.push({ sql: "DELETE FROM monthly_performance" });
+    statements.push({ sql: "DELETE FROM stock_levels" });
+    statements.push({ sql: "DELETE FROM forecasts" });
+    statements.push({ sql: "DELETE FROM payments" });
     statements.push({ sql: "DELETE FROM articles" });
+    statements.push({ sql: "DELETE FROM suppliers" });
+    statements.push({ sql: "DELETE FROM stockouts" });
+    statements.push({ sql: "DELETE FROM delay_by_month" });
+    statements.push({ sql: "DELETE FROM sales_actions" });
+    statements.push({ sql: "DELETE FROM inbound_orders" });
+    statements.push({ sql: "DELETE FROM goods_on_the_way" });
+    statements.push({ sql: "DELETE FROM in_production" });
+
+    // --- INSERTs: parents before children (FK order) ---
+
+    // Articles (parent)
     for (const a of articles) {
       statements.push({
         sql: "INSERT OR REPLACE INTO articles (article_id, article_name, category, units_per_container, production_lead_time_days, transit_lead_time_days) VALUES (?, ?, ?, ?, ?, ?)",
@@ -82,44 +99,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Forecasts
-    statements.push({ sql: "DELETE FROM forecasts" });
-    for (const f of forecasts) {
-      statements.push({
-        sql: "INSERT OR REPLACE INTO forecasts (article_id, year, month, target_units) VALUES (?, ?, ?, ?)",
-        args: [f.article_id, f.year, f.month, f.target_units],
-      });
-    }
-
-    // Stock levels
-    statements.push({ sql: "DELETE FROM stock_levels" });
-    for (const s of stockLevels) {
-      statements.push({
-        sql: "INSERT OR REPLACE INTO stock_levels (article_id, current_stock_units, last_updated) VALUES (?, ?, ?)",
-        args: [s.article_id, s.current_stock_units, s.last_updated],
-      });
-    }
-
-    // Monthly performance
-    statements.push({ sql: "DELETE FROM monthly_performance" });
-    for (const p of performance) {
-      statements.push({
-        sql: "INSERT OR REPLACE INTO monthly_performance (article_id, year, month, actual_units_sold, performance_pct, performance_m3, performance_m2, performance_m1, trend_3m) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-        args: [p.article_id, p.year, p.month, p.actual_units_sold, p.performance_pct, p.performance_m3, p.performance_m2, p.performance_m1, p.trend_3m],
-      });
-    }
-
-    // Seasonality
-    statements.push({ sql: "DELETE FROM seasonality" });
-    for (const s of seasonality) {
-      statements.push({
-        sql: "INSERT OR REPLACE INTO seasonality (article_id, month, seasonality_coefficient) VALUES (?, ?, ?)",
-        args: [s.article_id, s.month, s.seasonality_coefficient],
-      });
-    }
-
-    // Suppliers
-    statements.push({ sql: "DELETE FROM suppliers" });
+    // Suppliers (parent)
     for (const s of suppliers) {
       statements.push({
         sql: "INSERT OR REPLACE INTO suppliers (supplier_id, supplier_name, country, contact_email, payment_terms_days, deposit_pct) VALUES (?, ?, ?, ?, ?, ?)",
@@ -127,8 +107,39 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Payments
-    statements.push({ sql: "DELETE FROM payments" });
+    // Forecasts (references articles)
+    for (const f of forecasts) {
+      statements.push({
+        sql: "INSERT OR REPLACE INTO forecasts (article_id, year, month, target_units) VALUES (?, ?, ?, ?)",
+        args: [f.article_id, f.year, f.month, f.target_units],
+      });
+    }
+
+    // Stock levels (references articles)
+    for (const s of stockLevels) {
+      statements.push({
+        sql: "INSERT OR REPLACE INTO stock_levels (article_id, current_stock_units, last_updated) VALUES (?, ?, ?)",
+        args: [s.article_id, s.current_stock_units, s.last_updated],
+      });
+    }
+
+    // Monthly performance (references articles)
+    for (const p of performance) {
+      statements.push({
+        sql: "INSERT OR REPLACE INTO monthly_performance (article_id, year, month, actual_units_sold, performance_pct, performance_m3, performance_m2, performance_m1, trend_3m) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+        args: [p.article_id, p.year, p.month, p.actual_units_sold, p.performance_pct, p.performance_m3, p.performance_m2, p.performance_m1, p.trend_3m],
+      });
+    }
+
+    // Seasonality (references articles)
+    for (const s of seasonality) {
+      statements.push({
+        sql: "INSERT OR REPLACE INTO seasonality (article_id, month, seasonality_coefficient) VALUES (?, ?, ?)",
+        args: [s.article_id, s.month, s.seasonality_coefficient],
+      });
+    }
+
+    // Payments (references suppliers)
     for (const p of payments) {
       statements.push({
         sql: "INSERT OR REPLACE INTO payments (payment_id, supplier_id, supplier_name, payment_type, payment_method, amount_eur, due_date, paid_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -136,8 +147,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Stockouts
-    statements.push({ sql: "DELETE FROM stockouts" });
+    // Stockouts (no FK)
     for (const s of stockouts) {
       statements.push({
         sql: "INSERT OR REPLACE INTO stockouts (article_id, article_name, oos_since_date, available_from_date, affected_orders, delay_days, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -145,8 +155,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Delay by month
-    statements.push({ sql: "DELETE FROM delay_by_month" });
+    // Delay by month (no FK)
     for (const d of delayByMonth) {
       statements.push({
         sql: "INSERT OR REPLACE INTO delay_by_month (article_id, year, month, total_orders, delayed_orders, delay_rate_pct) VALUES (?, ?, ?, ?, ?, ?)",
@@ -154,8 +163,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Sales actions
-    statements.push({ sql: "DELETE FROM sales_actions" });
+    // Sales actions (no FK)
     for (const sa of salesActions) {
       statements.push({
         sql: "INSERT OR REPLACE INTO sales_actions (article_id, article_name, forecast_units, actual_units, performance_pct, overstock_units, action) VALUES (?, ?, ?, ?, ?, ?, ?)",
@@ -163,8 +171,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Inbound orders
-    statements.push({ sql: "DELETE FROM inbound_orders" });
+    // Inbound orders (no FK)
     for (const o of inboundOrders) {
       statements.push({
         sql: "INSERT OR REPLACE INTO inbound_orders (order_id, article_id, supplier_id, order_quantity, mix_or_single, etd_shipping_plan, etd_forwarder, etd_status, eta, warehouse_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -172,8 +179,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Goods on the way
-    statements.push({ sql: "DELETE FROM goods_on_the_way" });
+    // Goods on the way (no FK)
     for (const g of goodsOnTheWay) {
       statements.push({
         sql: "INSERT OR REPLACE INTO goods_on_the_way (order_id, supplier_id, supplier_name, article_id, article_name, order_quantity, etd_forwarder, eta, warehouse_date, order_volume_eur, deposit_value_paid_eur, balance_unpaid_eur) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -181,8 +187,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // In production
-    statements.push({ sql: "DELETE FROM in_production" });
+    // In production (no FK)
     for (const p of inProduction) {
       statements.push({
         sql: "INSERT OR REPLACE INTO in_production (order_id, article_id, article_name, supplier_id, supplier_name, order_quantity, deposit_paid_eur, etd_shipping_plan, etd_forwarder, etd_status, eta, warehouse_date) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)",
@@ -190,8 +195,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Shipment plans
-    statements.push({ sql: "DELETE FROM shipment_plans" });
+    // Shipment plans (references articles)
     for (const p of plans) {
       statements.push({
         sql: `INSERT OR REPLACE INTO shipment_plans
