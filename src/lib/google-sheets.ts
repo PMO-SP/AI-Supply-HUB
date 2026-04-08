@@ -3,7 +3,11 @@ import type { Article, Forecast, StockLevel, MonthlyPerformance, SeasonalityEntr
 
 function getAuth() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
-  const privateKey = process.env.GOOGLE_PRIVATE_KEY?.replace(/\\n/g, '\n');
+  const rawKey = process.env.GOOGLE_PRIVATE_KEY ?? "";
+  // Vercel sometimes wraps the value in quotes and/or keeps \n as literal backslash-n
+  const privateKey = rawKey
+    .replace(/^"|"$/g, "")       // remove surrounding quotes if present
+    .replace(/\\n/g, "\n");      // convert literal \n to real newlines
 
   if (!email || !privateKey) {
     throw new Error("Google credentials missing in environment variables");
