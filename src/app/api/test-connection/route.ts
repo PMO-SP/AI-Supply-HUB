@@ -21,25 +21,16 @@ export async function GET() {
     );
   }
 
-  // Step 2: Auth-Init
-  let auth: InstanceType<typeof google.auth.GoogleAuth>;
+  // Step 2: Auth-Init + Step 3: API-Call
   try {
-    auth = new google.auth.GoogleAuth({
+    const auth = new google.auth.GoogleAuth({
       credentials: {
         client_email: email,
         private_key: privateKey,
       },
       scopes: ["https://www.googleapis.com/auth/spreadsheets.readonly"],
     });
-  } catch (err) {
-    return NextResponse.json(
-      { ok: false, error: String(err), step: "auth-init" },
-      { status: 500 }
-    );
-  }
 
-  // Step 3: API-Call
-  try {
     const sheets = google.sheets({ version: "v4", auth });
     const response = await sheets.spreadsheets.get({ spreadsheetId });
 
