@@ -71,6 +71,22 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       articles, forecasts, overrides, stockLevels, performance, seasonality,
     });
 
+    // Build ID sets for FK filtering
+    const articleIds = new Set(articles.map((a) => a.article_id));
+    const supplierIds = new Set(suppliers.map((s) => s.supplier_id));
+
+    const validForecasts = forecasts.filter((f) => articleIds.has(f.article_id));
+    const validStockLevels = stockLevels.filter((s) => articleIds.has(s.article_id));
+    const validPerformance = performance.filter((p) => articleIds.has(p.article_id));
+    const validSeasonality = seasonality.filter((s) => articleIds.has(s.article_id));
+    const validPayments = payments.filter((p) => supplierIds.has(p.supplier_id));
+    const validPlans = plans.filter((p) => articleIds.has(p.article_id));
+
+    if (validForecasts.length !== forecasts.length)
+      console.warn(`[sync] ${forecasts.length - validForecasts.length} forecasts ohne gültigen article_id gefiltert`);
+    if (validPayments.length !== payments.length)
+      console.warn(`[sync] ${payments.length - validPayments.length} payments ohne gültigen supplier_id gefiltert`);
+
     const statements: { sql: string; args?: InValue[] }[] = [];
 
     // --- DELETEs: children before parents (FK order) ---
@@ -108,7 +124,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
     }
 
     // Forecasts (references articles)
-    for (const f of forecasts) {
+    for (const f of validForecasts) {
       statements.push({
         sql: "INSERT OR REPLACE INTO forecasts (article_id, year, month, target_units) VALUES (?, ?, ?, ?)",
         args: [f.article_id, f.year, f.month, f.target_units],
@@ -116,7 +132,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
     }
 
     // Stock levels (references articles)
-    for (const s of stockLevels) {
+    for (const s of validStockLevels) {
       statements.push({
         sql: "INSERT OR REPLACE INTO stock_levels (article_id, current_stock_units, last_updated) VALUES (?, ?, ?)",
         args: [s.article_id, s.current_stock_units, s.last_updated],
@@ -124,7 +140,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
     }
 
     // Monthly performance (references articles)
-    for (const p of performance) {
+    for (const p of validPerformance) {
       statements.push({
         sql: "INSERT OR REPLACE INTO monthly_performance (article_id, year, month, actual_units_sold, performance_pct, performance_m3, performance_m2, performance_m1, trend_3m) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         args: [p.article_id, p.year, p.month, p.actual_units_sold, p.performance_pct, p.performance_m3, p.performance_m2, p.performance_m1, p.trend_3m],
@@ -132,7 +148,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
     }
 
     // Seasonality (references articles)
-    for (const s of seasonality) {
+    for (const s of validSeasonality) {
       statements.push({
         sql: "INSERT OR REPLACE INTO seasonality (article_id, month, seasonality_coefficient) VALUES (?, ?, ?)",
         args: [s.article_id, s.month, s.seasonality_coefficient],
@@ -140,7 +156,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
     }
 
     // Payments (references suppliers)
-    for (const p of payments) {
+    for (const p of validPayments) {
       statements.push({
         sql: "INSERT OR REPLACE INTO payments (payment_id, supplier_id, supplier_name, payment_type, payment_method, amount_eur, due_date, paid_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         args: [p.payment_id, p.supplier_id, p.supplier_name, p.payment_type, p.payment_method, p.amount_eur, p.due_date, p.paid_date, p.status],
@@ -196,7 +212,7 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
     }
 
     // Shipment plans (references articles)
-    for (const p of plans) {
+    for (const p of validPlans) {
       statements.push({
         sql: `INSERT OR REPLACE INTO shipment_plans
           (article_id, year, month, target_units, containers_needed, arrival_date, ship_date, production_start,
