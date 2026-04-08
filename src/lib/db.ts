@@ -25,16 +25,9 @@ let sqlPromise: ReturnType<typeof initSqlJs> | null = null;
 
 function getSql() {
   if (!sqlPromise) {
-    // Locate the WASM file in node_modules
-    const wasmPath = path.resolve(
-      process.cwd(),
-      "node_modules",
-      "sql.js",
-      "dist",
-      "sql-wasm.wasm"
-    );
     sqlPromise = initSqlJs({
-      locateFile: () => wasmPath,
+      locateFile: (file: string) =>
+        `https://cdnjs.cloudflare.com/ajax/libs/sql.js/1.11.0/${file}`,
     });
   }
   return sqlPromise;
