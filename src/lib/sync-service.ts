@@ -39,9 +39,10 @@ export interface SyncResult {
 
 export async function syncFromGoogleSheets(): Promise<SyncResult> {
   const startedAt = new Date().toISOString();
-  const db = await getDb();
 
   try {
+    console.log("[sync] Start");
+    const db = await getDb();
     const [
       articles, forecasts, stockLevels, performance, seasonality,
       suppliers, payments, stockouts, delayByMonth, salesActions,
@@ -53,6 +54,16 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       fetchSalesActions(), fetchInboundOrders(), fetchGoodsOnTheWay(),
       fetchInProduction(),
     ]);
+
+    console.log("[sync] Sheets geladen:", {
+      articles: articles.length, forecasts: forecasts.length,
+      stockLevels: stockLevels.length, performance: performance.length,
+      seasonality: seasonality.length, suppliers: suppliers.length,
+      payments: payments.length, stockouts: stockouts.length,
+      delayByMonth: delayByMonth.length, salesActions: salesActions.length,
+      inboundOrders: inboundOrders.length, goodsOnTheWay: goodsOnTheWay.length,
+      inProduction: inProduction.length,
+    });
 
     const overrides = (await db.prepare("SELECT * FROM overrides").all()) as unknown as Override[];
 
@@ -227,7 +238,9 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
     };
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
+    console.error("[sync] Fehler:", errorMessage);
     try {
+      const db = await getDb();
       await db.prepare(
         "INSERT INTO sync_log (status, error_message, started_at) VALUES (?, ?, ?)"
       ).run("error", errorMessage, startedAt);
