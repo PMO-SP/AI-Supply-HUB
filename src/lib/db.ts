@@ -1,4 +1,6 @@
 import { createClient, type Client, type InValue } from "@libsql/client";
+import { readFileSync } from "fs";
+import { join } from "path";
 
 export interface PreparedResult {
   all(...params: InValue[]): Promise<unknown[]>;
@@ -15,6 +17,7 @@ export interface Db {
 }
 
 let client: Client | null = null;
+let schemaInitialized = false;
 
 function getClient(): Client {
   if (!client) {
@@ -38,8 +41,22 @@ function rowsToObjects(
   );
 }
 
+async function initSchema(c: Client): Promise<void> {
+  if (schemaInitialized) return;
+  const schemaPath = join(process.cwd(), "db", "schema.sql");
+  const schema = readFileSync(schemaPath, "utf-8");
+  const statements = schema
+    .split(";")
+    .map((s) => s.trim())
+    .filter((s) => s.length > 0)
+    .map((s) => ({ sql: s + ";", args: [] as InValue[] }));
+  await c.batch(statements, "write");
+  schemaInitialized = true;
+}
+
 export async function getDb(): Promise<Db> {
   const c = getClient();
+  await initSchema(c);
 
   return {
     prepare(sql: string): PreparedResult {
