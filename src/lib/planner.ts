@@ -290,10 +290,11 @@ export function computeShipmentPlans(
 
     // --- Base calculations ---
     let targetUnits = forecast.target_units;
+    const unitsPerContainer = Math.max(1, article.units_per_container);
     let containersNeeded =
       totalUnitsNeeded <= 0
         ? 0
-        : Math.ceil(totalUnitsNeeded / article.units_per_container);
+        : Math.ceil(totalUnitsNeeded / unitsPerContainer);
     let shipDate = subDays(arrivalDate, article.transit_lead_time_days);
     let productionStart = subDays(shipDate, article.production_lead_time_days);
 
@@ -341,7 +342,7 @@ export function computeShipmentPlans(
           targetUnits = parseInt(override.override_value, 10);
           containersNeeded = Math.ceil(
             Math.max(0, targetUnits - currentStock + safetyStockUnits) /
-              article.units_per_container
+              unitsPerContainer
           );
           break;
         case "containers_needed":
