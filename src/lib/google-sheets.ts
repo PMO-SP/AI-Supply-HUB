@@ -1,13 +1,5 @@
-function getSheetId(): string {
-  const id = process.env.GOOGLE_SHEETS_SPREADSHEET_ID;
-  if (!id) {
-    throw new Error("GOOGLE_SHEETS_SPREADSHEET_ID is not set");
-  }
-  return id;
-}
-Die Datei sollte dann so anfangen:
-typescriptimport { google } from "googleapis";
-import type { ... } from "./types";
+import { google } from "googleapis";
+import type { Article, Forecast, StockLevel, MonthlyPerformance, SeasonalityEntry, Supplier, Payment, PaymentType, PaymentMethod, PaymentStatus, Stockout, StockoutStatus, DelayByMonth, SalesAction, SalesActionType, InboundOrder, ETDStatus, GoodsOnTheWay, InProduction } from "./types";
 
 function getAuth() {
   const email = process.env.GOOGLE_SERVICE_ACCOUNT_EMAIL;
@@ -33,7 +25,6 @@ function getSheetId(): string {
   }
   return id;
 }
-
 /**
  * Parse a date string that may be in dd.mm.yyyy (German) or yyyy-mm-dd (ISO) format.
  * Returns ISO yyyy-mm-dd for DB storage. Returns empty string if unparseable.
