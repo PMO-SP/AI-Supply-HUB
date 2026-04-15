@@ -54,7 +54,7 @@ async function runMigrations(c: Client): Promise<void> {
     const fkList = await c.execute("PRAGMA foreign_key_list(payments)");
     if (fkList.rows.length > 0) {
       await c.batch([
-        { sql: "DROP TABLE IF EXISTS payments" },
+        { sql: "DROP TABLE IF EXISTS payments", args: [] },
         {
           sql: `CREATE TABLE payments (
             payment_id TEXT PRIMARY KEY,
@@ -68,6 +68,7 @@ async function runMigrations(c: Client): Promise<void> {
             status TEXT NOT NULL CHECK(status IN ('open', 'paid', 'overdue')) DEFAULT 'open',
             synced_at TEXT NOT NULL DEFAULT (datetime('now'))
           )`,
+          args: [],
         },
       ], "write");
       console.log("[migration] M001: payments table rebuilt without FK constraint");
