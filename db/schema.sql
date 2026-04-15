@@ -114,8 +114,9 @@ CREATE TABLE IF NOT EXISTS payments (
   due_date TEXT NOT NULL,
   paid_date TEXT,
   status TEXT NOT NULL CHECK(status IN ('open', 'paid', 'overdue')) DEFAULT 'open',
-  synced_at TEXT NOT NULL DEFAULT (datetime('now')),
-  FOREIGN KEY (supplier_id) REFERENCES suppliers(supplier_id)
+  synced_at TEXT NOT NULL DEFAULT (datetime('now'))
+  -- Kein FOREIGN KEY auf suppliers: supplier_name ist denormalisiert,
+  -- /api/payments braucht keinen JOIN. Turso erzwingt FK per Default.
 );
 
 CREATE TABLE IF NOT EXISTS stockouts (

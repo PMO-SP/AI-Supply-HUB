@@ -18,6 +18,7 @@ export interface Db {
 
 let client: Client | null = null;
 let schemaInitialized = false;
+let migrationsRun = false;
 
 function getClient(): Client {
   if (!client) {
@@ -41,6 +42,43 @@ function rowsToObjects(
   );
 }
 
+/**
+ * M001: payments-Tabelle ohne FOREIGN KEY neu erstellen.
+ * Turso erzwingt FK-Constraints per Default. supplier_name ist in payments
+ * denormalisiert, /api/payments braucht keinen JOIN auf suppliers.
+ * Der FK-Constraint würde den Sync blockieren wenn supplier_ids nicht exakt übereinstimmen.
+ */
+async function runMigrations(c: Client): Promise<void> {
+  if (migrationsRun) return;
+  try {
+    const fkList = await c.execute("PRAGMA foreign_key_list(payments)");
+    if (fkList.rows.length > 0) {
+      await c.batch([
+        { sql: "DROP TABLE IF EXISTS payments" },
+        {
+          sql: `CREATE TABLE payments (
+            payment_id TEXT PRIMARY KEY,
+            supplier_id TEXT NOT NULL,
+            supplier_name TEXT NOT NULL DEFAULT '',
+            payment_type TEXT NOT NULL CHECK(payment_type IN ('Anzahlung', 'Restzahlung')),
+            payment_method TEXT NOT NULL DEFAULT 'Vorkasse' CHECK(payment_method IN ('Vorkasse', 'Kreditlinie')),
+            amount_eur REAL NOT NULL DEFAULT 0,
+            due_date TEXT NOT NULL,
+            paid_date TEXT,
+            status TEXT NOT NULL CHECK(status IN ('open', 'paid', 'overdue')) DEFAULT 'open',
+            synced_at TEXT NOT NULL DEFAULT (datetime('now'))
+          )`,
+        },
+      ], "write");
+      console.log("[migration] M001: payments table rebuilt without FK constraint");
+    }
+  } catch (e) {
+    // Tabelle existiert noch nicht — initSchema legt sie an
+    console.log("[migration] M001: payments table not yet present, skipping");
+  }
+  migrationsRun = true;
+}
+
 async function initSchema(c: Client): Promise<void> {
   if (schemaInitialized) return;
   const schemaPath = join(process.cwd(), "db", "schema.sql");
@@ -56,6 +94,7 @@ async function initSchema(c: Client): Promise<void> {
 
 export async function getDb(): Promise<Db> {
   const c = getClient();
+  await runMigrations(c);
   await initSchema(c);
 
   return {
