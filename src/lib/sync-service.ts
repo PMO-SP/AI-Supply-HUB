@@ -71,21 +71,20 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       articles, forecasts, overrides, stockLevels, performance, seasonality,
     });
 
-    // Build ID sets for FK filtering
+    // Build ID sets for FK filtering (article-dependent tables only)
     const articleIds = new Set(articles.map((a) => a.article_id));
-    const supplierIds = new Set(suppliers.map((s) => s.supplier_id));
 
     const validForecasts = forecasts.filter((f) => articleIds.has(f.article_id));
     const validStockLevels = stockLevels.filter((s) => articleIds.has(s.article_id));
     const validPerformance = performance.filter((p) => articleIds.has(p.article_id));
     const validSeasonality = seasonality.filter((s) => articleIds.has(s.article_id));
-    const validPayments = payments.filter((p) => supplierIds.has(p.supplier_id));
+    // Payments are not FK-filtered: supplier_name is denormalized in each row,
+    // the /api/payments endpoint needs no JOIN, and Turso doesn't enforce FK constraints.
+    // Filtering by supplierIds would silently drop valid payment rows.
     const validPlans = plans.filter((p) => articleIds.has(p.article_id));
 
     if (validForecasts.length !== forecasts.length)
       console.warn(`[sync] ${forecasts.length - validForecasts.length} forecasts ohne gültigen article_id gefiltert`);
-    if (validPayments.length !== payments.length)
-      console.warn(`[sync] ${payments.length - validPayments.length} payments ohne gültigen supplier_id gefiltert`);
 
     const statements: { sql: string; args?: InValue[] }[] = [];
 
@@ -165,8 +164,8 @@ export async function syncFromGoogleSheets(): Promise<SyncResult> {
       });
     }
 
-    // Payments (references suppliers)
-    for (const p of validPayments) {
+    // Payments (supplier_name is denormalized — insert all rows without FK filtering)
+    for (const p of payments) {
       statements.push({
         sql: "INSERT OR REPLACE INTO payments (payment_id, supplier_id, supplier_name, payment_type, payment_method, amount_eur, due_date, paid_date, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
         args: [p.payment_id, p.supplier_id, p.supplier_name, p.payment_type, p.payment_method, p.amount_eur, p.due_date, p.paid_date, p.status],
