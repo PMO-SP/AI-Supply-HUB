@@ -168,9 +168,9 @@ export default function HerstellerView() {
     3: "bg-brand-red/15 border-brand-red/40",
   };
   const stufeLabels: Record<MahnStufe, string> = {
-    0: "Nicht fallig",
-    1: "1-14 Tage",
-    2: "15-30 Tage",
+    0: "Nicht fällig",
+    1: "1–14 Tage",
+    2: "15–30 Tage",
     3: "> 30 Tage",
   };
 
@@ -200,8 +200,8 @@ export default function HerstellerView() {
         {[
           { label: "Offene Anzahlungen", value: formatEur(stats.anzahlungTotal), sub: `${stats.anzahlungCount} Lieferant${stats.anzahlungCount !== 1 ? "en" : ""}`, color: "text-gray-900" },
           { label: "Offene Restzahlungen", value: formatEur(stats.restzahlungTotal), sub: `${stats.restzahlungCount} Lieferant${stats.restzahlungCount !== 1 ? "en" : ""}`, color: "text-gray-900" },
-          { label: "Fallig diesen Monat", value: formatEur(stats.dueThisMonthTotal), sub: new Date().toLocaleDateString("de-DE", { month: "long", year: "numeric" }), color: "text-gray-900" },
-          { label: "Uberfallig gesamt", value: formatEur(stats.overdueTotal), sub: `${stats.overdueCount} Zahlungen`, color: "text-brand-red" },
+          { label: "Fällig diesen Monat", value: formatEur(stats.dueThisMonthTotal), sub: new Date().toLocaleDateString("de-DE", { month: "long", year: "numeric" }), color: "text-gray-900" },
+          { label: "Überfällig gesamt", value: formatEur(stats.overdueTotal), sub: `${stats.overdueCount} Zahlungen`, color: "text-brand-red" },
         ].map((card) => (
           <div key={card.label} className="bg-white rounded border border-gray-100 px-3 py-2">
             <div className="text-[9px] text-gray-500 uppercase tracking-[0.4px] mb-0.5">{card.label}</div>
@@ -215,7 +215,7 @@ export default function HerstellerView() {
       <div className="grid grid-cols-[3fr_1fr] gap-2">
         {/* Cash Flow */}
         <div className="bg-white rounded border border-gray-100 p-3">
-          <div className="text-[9px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-2">Cash Flow - Monatsubersicht</div>
+          <div className="text-[9px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-2">Cash Flow — Monatsübersicht</div>
           <table className="w-full text-[10px]">
             <thead>
               <tr className="bg-gray-50/50">
@@ -269,16 +269,20 @@ export default function HerstellerView() {
           <div className="text-[9px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-2">Mahnstufen</div>
           <div className="space-y-1.5">
             {mahnStufen.map((level) => (
-              <div key={level.stufe} className={`flex items-center justify-between rounded border px-2 py-1.5 ${stufeStyles[level.stufe]}`}>
-                <div className="flex items-center gap-1.5">
-                  <MahnStufeBadge stufe={level.stufe} />
-                  <span className="text-[9px] text-gray-500">{stufeLabels[level.stufe]}</span>
-                </div>
-                <div className="text-right">
+              <div key={level.stufe} className={`rounded border px-2 py-1.5 ${stufeStyles[level.stufe]}`}>
+                <div className="flex items-center justify-between mb-0.5">
+                  <div className="flex items-center gap-1.5">
+                    <MahnStufeBadge stufe={level.stufe} />
+                    <span className="text-[9px] text-gray-500">{stufeLabels[level.stufe]}</span>
+                  </div>
                   <div className={`text-[10px] font-mono font-medium ${level.stufe >= 2 ? "text-brand-red" : level.stufe === 1 ? "text-status-amber-dark" : "text-gray-600"}`}>
                     {formatEur(level.total)}
                   </div>
-                  <div className="text-[8px] text-gray-400">{level.supplierCount} Lief.</div>
+                </div>
+                <div className="flex gap-2 text-[8px] text-gray-400">
+                  <span>{level.count} Zahlung{level.count !== 1 ? "en" : ""}</span>
+                  <span>·</span>
+                  <span>{level.supplierCount} Lief.</span>
                 </div>
               </div>
             ))}
@@ -289,7 +293,7 @@ export default function HerstellerView() {
       {/* ============ ROW 2: Top 10 Supplier bars ============ */}
       <div className="bg-white rounded border border-gray-100 p-3">
         <div className="text-[9px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-2">
-          Top 10 - Offene Betrage pro Lieferant
+          Top 10 — Offene Beträge pro Lieferant
         </div>
         <div className="space-y-1.5">
           {supplierBars.slice(0, 10).map((s, idx) => {
@@ -349,7 +353,7 @@ export default function HerstellerView() {
           <table className="w-full text-[10px]">
             <thead>
               <tr className="bg-gray-50/50">
-                {["", "Lieferant", "Typ", "Zahlart", "Betrag", "Fallig am", "Verzug", "Mahnstufe", "Status"].map((h, i) => (
+                {["", "Lieferant", "Typ", "Zahlart", "Betrag", "Fällig am", "Verzug", "Mahnstufe", "Status"].map((h, i) => (
                   <th key={h || `h${i}`} className={`py-1.5 px-2 font-medium text-gray-400 text-[9px] uppercase tracking-[0.3px] border-b border-gray-100 ${i === 4 ? "text-right" : i === 6 ? "text-right" : "text-left"}`}>
                     {h}
                   </th>
@@ -374,9 +378,13 @@ export default function HerstellerView() {
                       </span>
                     </td>
                     <td className="py-[5px] px-2">
-                      <span className={`text-[8px] px-1.5 py-[1px] rounded-full font-medium ${method === "Kreditlinie" ? "bg-purple-50 text-purple-600" : "bg-blue-50 text-blue-600"}`}>
-                        {method}
-                      </span>
+                      {p.payment_type === "Restzahlung" ? (
+                        <span className={`text-[8px] px-1.5 py-[1px] rounded-full font-medium ${method === "Kreditlinie" ? "bg-purple-50 text-purple-600" : "bg-blue-50 text-blue-600"}`}>
+                          {method}
+                        </span>
+                      ) : (
+                        <span className="text-gray-200 text-[9px]">&mdash;</span>
+                      )}
                     </td>
                     <td className="py-[5px] px-2 text-right font-mono font-medium text-gray-800">{formatEur(p.amount_eur)}</td>
                     <td className="py-[5px] px-2">
@@ -397,7 +405,7 @@ export default function HerstellerView() {
                         </span>
                       ) : isOverdue ? (
                         <span className="inline-flex items-center gap-0.5 text-[8px] px-1.5 py-[1px] rounded-full font-medium bg-status-red-light text-status-red-dark">
-                          <span className="w-1 h-1 rounded-full bg-brand-red" />Uberfallig
+                          <span className="w-1 h-1 rounded-full bg-brand-red" />Überfällig
                         </span>
                       ) : (
                         <span className="inline-flex items-center gap-0.5 text-[8px] px-1.5 py-[1px] rounded-full font-medium bg-blue-50 text-blue-600">
