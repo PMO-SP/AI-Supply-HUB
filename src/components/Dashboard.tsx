@@ -223,18 +223,19 @@ export default function Dashboard() {
   /* ---------- Dashboard: Hersteller Zahlungen + Goods stats ---------- */
   const fmtEur = (n: number) => n.toLocaleString("de-DE", { style: "currency", currency: "EUR", minimumFractionDigits: 0, maximumFractionDigits: 0 });
 
+  // Deduplicate by supplier_name so multi-ID suppliers (e.g. "397" + "397kredit") appear only once
   const dashSupplierList = useMemo(() => {
-    const seen = new Map<string, string>();
+    const seen = new Set<string>();
     for (const p of payments) {
-      if (!seen.has(p.supplier_id)) seen.set(p.supplier_id, p.supplier_name);
+      if (p.supplier_name) seen.add(p.supplier_name);
     }
-    return Array.from(seen.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
   }, [payments]);
 
   // Payments only filterable by supplier (no article_id in payments)
   const dashFilteredPayments = useMemo(() => {
     if (dashboardSupplierFilter === "all") return payments;
-    return payments.filter((p) => p.supplier_id === dashboardSupplierFilter);
+    return payments.filter((p) => p.supplier_name === dashboardSupplierFilter);
   }, [payments, dashboardSupplierFilter]);
 
   const dashMahnStufen = useMemo(() => {
@@ -252,7 +253,7 @@ export default function Dashboard() {
 
   const filteredGoods = useMemo(() => {
     let filtered = goods;
-    if (dashboardSupplierFilter !== "all") filtered = filtered.filter((g) => g.supplier_id === dashboardSupplierFilter);
+    if (dashboardSupplierFilter !== "all") filtered = filtered.filter((g) => g.supplier_name === dashboardSupplierFilter);
     if (articleFilter) filtered = filtered.filter((g) => g.article_id === articleFilter);
     return filtered;
   }, [goods, dashboardSupplierFilter, articleFilter]);
@@ -267,7 +268,7 @@ export default function Dashboard() {
   // In Production stats (filtered by supplier + article)
   const filteredProd = useMemo(() => {
     let result = prodOrders;
-    if (dashboardSupplierFilter !== "all") result = result.filter((o) => o.supplier_id === dashboardSupplierFilter);
+    if (dashboardSupplierFilter !== "all") result = result.filter((o) => o.supplier_name === dashboardSupplierFilter);
     if (articleFilter) result = result.filter((o) => o.article_id === articleFilter);
     return result;
   }, [prodOrders, dashboardSupplierFilter, articleFilter]);
@@ -469,7 +470,7 @@ export default function Dashboard() {
                     className="text-[10px] border border-gray-200 rounded px-2 py-0.5 bg-white focus:outline-none focus:ring-1 focus:ring-brand-red/30"
                   >
                     <option value="all">Alle Hersteller</option>
-                    {dashSupplierList.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+                    {dashSupplierList.map((name) => <option key={name} value={name}>{name}</option>)}
                   </select>
                   {dashboardSupplierFilter !== "all" && (
                     <button onClick={() => setDashboardSupplierFilter("all")} className="text-[9px] text-brand-red hover:underline">Filter entfernen</button>

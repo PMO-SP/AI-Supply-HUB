@@ -62,7 +62,7 @@ function PaymentStatusDot({ payment }: { payment: PaymentWithDunning }) {
 export default function HerstellerView() {
   const { payments, isLoading } = usePayments();
   const { suppliers } = useSuppliers();
-  const [selectedSupplier, setSelectedSupplier] = useState<string>("all");
+  const [selectedSupplier, setSelectedSupplier] = useState<string>("all"); // stores supplier_name or "all"
 
   const supplierMap = useMemo(() => {
     const map = new Map<string, Supplier>();
@@ -72,15 +72,16 @@ export default function HerstellerView() {
 
   const filteredPayments = useMemo(() => {
     if (selectedSupplier === "all") return payments;
-    return payments.filter((p) => p.supplier_id === selectedSupplier);
+    return payments.filter((p) => p.supplier_name === selectedSupplier);
   }, [payments, selectedSupplier]);
 
+  // Deduplicate by supplier_name so multi-ID suppliers appear only once
   const supplierList = useMemo(() => {
-    const seen = new Map<string, string>();
+    const seen = new Set<string>();
     for (const p of payments) {
-      if (!seen.has(p.supplier_id)) seen.set(p.supplier_id, p.supplier_name);
+      if (p.supplier_name) seen.add(p.supplier_name);
     }
-    return Array.from(seen.entries()).map(([id, name]) => ({ id, name })).sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
   }, [payments]);
 
   /* ---------- Computed stats ---------- */
@@ -132,20 +133,21 @@ export default function HerstellerView() {
   /* ---------- Supplier bars ---------- */
   const supplierBars = useMemo(() => {
     const open = filteredPayments.filter((p) => p.status !== "paid");
+    // Group by supplier_name so multi-ID suppliers (e.g. "397" + "397kredit") are merged
     const map = new Map<string, { name: string; total: number; anzahlung: number; restzahlungVorkasse: number; restzahlungKreditlinie: number; maxOverdue: number; depositPct: number }>();
     for (const p of open) {
-      if (!map.has(p.supplier_id)) {
+      if (!map.has(p.supplier_name)) {
         const supplier = supplierMap.get(p.supplier_id);
-        map.set(p.supplier_id, { name: p.supplier_name, total: 0, anzahlung: 0, restzahlungVorkasse: 0, restzahlungKreditlinie: 0, maxOverdue: 0, depositPct: supplier?.deposit_pct ?? 30 });
+        map.set(p.supplier_name, { name: p.supplier_name, total: 0, anzahlung: 0, restzahlungVorkasse: 0, restzahlungKreditlinie: 0, maxOverdue: 0, depositPct: supplier?.deposit_pct ?? 30 });
       }
-      const e = map.get(p.supplier_id)!;
+      const e = map.get(p.supplier_name)!;
       e.total += p.amount_eur;
       if (p.payment_type === "Anzahlung") e.anzahlung += p.amount_eur;
       else if (p.payment_method === "Kreditlinie") e.restzahlungKreditlinie += p.amount_eur;
       else e.restzahlungVorkasse += p.amount_eur;
       e.maxOverdue = Math.max(e.maxOverdue, p.days_overdue);
     }
-    const arr = Array.from(map.entries()).map(([id, d]) => ({ id, ...d }));
+    const arr = Array.from(map.values());
     arr.sort((a, b) => b.total - a.total);
     return arr;
   }, [filteredPayments, supplierMap]);
@@ -188,7 +190,7 @@ export default function HerstellerView() {
           className="text-[11px] border border-gray-200 rounded px-2 py-1 bg-white focus:outline-none focus:ring-1 focus:ring-brand-red/30 focus:border-brand-red"
         >
           <option value="all">Alle Hersteller</option>
-          {supplierList.map((s) => <option key={s.id} value={s.id}>{s.name}</option>)}
+          {supplierList.map((name) => <option key={name} value={name}>{name}</option>)}
         </select>
         {selectedSupplier !== "all" && (
           <button onClick={() => setSelectedSupplier("all")} className="text-[10px] text-brand-red hover:underline">Filter entfernen</button>
@@ -302,16 +304,16 @@ export default function HerstellerView() {
             if (s.maxOverdue > 0) barColor = "bg-brand-red";
             else {
               const hasDueSoon = filteredPayments.some(
-                (p) => p.supplier_id === s.id && p.status !== "paid" && p.days_overdue === 0 &&
+                (p) => p.supplier_name === s.name && p.status !== "paid" && p.days_overdue === 0 &&
                 (new Date(p.due_date + "T00:00:00").getTime() - Date.now()) / (1000*60*60*24) <= 14
               );
               if (hasDueSoon) barColor = "bg-status-amber";
             }
             return (
               <div
-                key={s.id}
-                className={`cursor-pointer rounded px-2 py-1 transition-colors ${selectedSupplier === s.id ? "bg-brand-red/5 ring-1 ring-brand-red/20" : "hover:bg-gray-50"}`}
-                onClick={() => setSelectedSupplier(selectedSupplier === s.id ? "all" : s.id)}
+                key={s.name}
+                className={`cursor-pointer rounded px-2 py-1 transition-colors ${selectedSupplier === s.name ? "bg-brand-red/5 ring-1 ring-brand-red/20" : "hover:bg-gray-50"}`}
+                onClick={() => setSelectedSupplier(selectedSupplier === s.name ? "all" : s.name)}
               >
                 <div className="flex justify-between items-center mb-0.5">
                   <span className="flex items-center gap-1">
@@ -346,7 +348,7 @@ export default function HerstellerView() {
         <div className="px-3 py-1.5 border-b border-gray-100 bg-gray-50/50">
           <span className="text-[9px] font-medium text-gray-500 uppercase tracking-[0.4px]">
             Zahlungsdetails
-            {selectedSupplier !== "all" && <span className="ml-1.5 text-brand-red normal-case">- {supplierList.find((s) => s.id === selectedSupplier)?.name}</span>}
+            {selectedSupplier !== "all" && <span className="ml-1.5 text-brand-red normal-case">- {selectedSupplier}</span>}
           </span>
         </div>
         <div className="overflow-x-auto">
