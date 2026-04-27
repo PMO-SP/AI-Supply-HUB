@@ -42,15 +42,34 @@ body {
   background-color: #f9fafb !important;
 }
 
-/* Scale down for small screens (14" laptops ~1366x768 or 1920x1080 at 125% scaling) */
-@media (max-height: 800px) {
+/*
+ * Responsive scaling via CSS zoom on the root element.
+ *
+ * Base design targets 14" laptop (~1366–1600px effective viewport).
+ * zoom on html scales ALL px-based sizes (text, sidebar, icons, gaps)
+ * proportionally, and viewport units (vh/vw) stay correct because they
+ * are resolved in the post-zoom coordinate space.
+ *
+ * Breakpoints:
+ *   < 1920px  →  no zoom  (14" laptop, also covers scaled-up FHD)
+ *  ≥ 1920px   →  1.2×    (24" FHD at 100%, large external monitors)
+ *  ≥ 2400px   →  1.45×   (27" QHD)
+ *  ≥ 3200px   →  1.75×   (4K / large ultrawide)
+ */
+@media (min-width: 1920px) {
   html {
-    font-size: 14px;
+    zoom: 1.2;
   }
 }
 
-@media (max-height: 700px) {
+@media (min-width: 2400px) {
   html {
-    font-size: 13px;
+    zoom: 1.45;
+  }
+}
+
+@media (min-width: 3200px) {
+  html {
+    zoom: 1.75;
   }
 }
