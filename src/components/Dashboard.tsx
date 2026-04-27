@@ -371,24 +371,24 @@ export default function Dashboard() {
   return (
     <div className="flex h-screen overflow-hidden bg-gray-100">
       {/* ============== SIDEBAR ============== */}
-      <aside className="w-[155px] bg-brand-black flex flex-col flex-shrink-0">
+      <aside className="w-[170px] bg-brand-black flex flex-col flex-shrink-0">
         {/* Logo */}
-        <div className="px-2.5 pt-2.5 pb-2 border-b border-brand-gray-900">
-          <div className="text-[11px] font-medium text-white tracking-[1.5px] uppercase">
+        <div className="px-3 pt-3 pb-2.5 border-b border-brand-gray-900">
+          <div className="text-[13px] font-medium text-white tracking-[1.5px] uppercase">
             Sportstech
           </div>
-          <div className="text-[8px] text-brand-red tracking-[0.5px] uppercase mt-0.5">
+          <div className="text-[10px] text-brand-red tracking-[0.5px] uppercase mt-0.5">
             AI Supply Hub
           </div>
         </div>
 
         {/* Navigation */}
-        <nav className="py-1.5 flex-1 sidebar-scroll overflow-y-auto">
+        <nav className="py-2 flex-1 sidebar-scroll overflow-y-auto">
           {navItems.map((item) => (
             <button
               key={item.key}
               onClick={() => setTab(item.key)}
-              className={`w-full flex items-center gap-1.5 px-2.5 py-[5px] text-[10px] transition-colors ${
+              className={`w-full flex items-center gap-2 px-3 py-[7px] text-[11px] transition-colors ${
                 tab === item.key
                   ? `${item.className || "text-white"} bg-brand-black-soft border-l-2 border-brand-red`
                   : `${item.className || "text-brand-gray-500"} hover:text-brand-gray-300 border-l-2 border-transparent`
@@ -397,7 +397,7 @@ export default function Dashboard() {
               <span className="opacity-70">{item.icon}</span>
               {item.label}
               {item.key === "dashboard" && warnings.length > 0 && (
-                <span className="ml-auto text-[8px] bg-brand-red text-white px-1 py-0.5 rounded-full">
+                <span className="ml-auto text-[9px] bg-brand-red text-white px-1.5 py-0.5 rounded-full">
                   {warnings.length}
                 </span>
               )}
@@ -406,9 +406,9 @@ export default function Dashboard() {
         </nav>
 
         {/* Sidebar footer - last sync */}
-        <div className="px-2.5 py-1.5 border-t border-brand-gray-900">
-          <div className="text-[8px] text-brand-gray-700">Letzte Sync</div>
-          <div className="text-[9px] text-brand-gray-500 mt-0.5">
+        <div className="px-3 py-2 border-t border-brand-gray-900">
+          <div className="text-[9px] text-brand-gray-700">Letzte Sync</div>
+          <div className="text-[10px] text-brand-gray-500 mt-0.5">
             {new Date().toLocaleDateString("de-DE", { day: "2-digit", month: "2-digit" })}{" "}
             {new Date().toLocaleTimeString("de-DE", { hour: "2-digit", minute: "2-digit" })}
           </div>
@@ -418,8 +418,8 @@ export default function Dashboard() {
       {/* ============== MAIN CONTENT ============== */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <header className="bg-white border-b border-gray-200 px-3 flex items-center justify-between h-[34px] flex-shrink-0">
-          <h2 className="text-[11px] font-medium text-gray-900">
+        <header className="bg-white border-b border-gray-200 px-4 flex items-center justify-between h-[42px] flex-shrink-0">
+          <h2 className="text-[13px] font-medium text-gray-900">
             {tab === "dashboard" ? "Container Dashboard" :
              tab === "container-plan" ? "AI Inbound Plan" :
              tab === "goods-on-the-way" ? "Goods on the Way" :
@@ -485,66 +485,66 @@ export default function Dashboard() {
               {/* KPI Row: Mahnstufen + Überfällig + Container Value + Deposit */}
               <div className="grid grid-cols-3 gap-1.5">
                 {/* LEFT: Mahnstufen */}
-                <div className="bg-white rounded border border-gray-100 p-2">
-                  <div className="text-[8px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-1.5">Mahnstufen — Übersicht</div>
-                  <div className="space-y-[3px]">
+                <div className="bg-white rounded border border-gray-100 p-2.5">
+                  <div className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-2">Mahnstufen — Übersicht</div>
+                  <div className="space-y-1">
                     {dashMahnStufen.map((level) => (
-                      <div key={level.stufe} className={`flex items-center justify-between rounded border px-1.5 py-[3px] ${stufeStyles[level.stufe]}`}>
-                        <div className="flex items-center gap-1">
-                          <span className={`inline-block text-[7px] px-1 py-[1px] rounded-full font-medium ${
+                      <div key={level.stufe} className={`flex items-center justify-between rounded border px-2 py-1 ${stufeStyles[level.stufe]}`}>
+                        <div className="flex items-center gap-1.5">
+                          <span className={`inline-block text-[9px] px-1.5 py-[1px] rounded-full font-medium ${
                             level.stufe === 0 ? "bg-status-green-light text-status-green-dark" :
                             level.stufe === 1 ? "bg-status-amber-light text-status-amber-dark" :
                             level.stufe === 2 ? "bg-status-red-light text-status-red-dark" :
                             "bg-brand-red text-white"
                           }`}>Stufe {level.stufe}</span>
-                          <span className="text-[7px] text-gray-500">{stufeLabels[level.stufe]}</span>
+                          <span className="text-[10px] text-gray-500">{stufeLabels[level.stufe]}</span>
                         </div>
                         <div className="text-right">
-                          <div className={`text-[9px] font-mono font-medium ${level.stufe >= 2 ? "text-brand-red" : level.stufe === 1 ? "text-status-amber-dark" : "text-gray-600"}`}>
+                          <div className={`text-[11px] font-mono font-medium ${level.stufe >= 2 ? "text-brand-red" : level.stufe === 1 ? "text-status-amber-dark" : "text-gray-600"}`}>
                             {fmtEur(level.total)}
                           </div>
-                          <div className="text-[6px] text-gray-400">{level.count} Zahlungen / {level.supplierCount} Lief.</div>
+                          <div className="text-[9px] text-gray-400">{level.count} Zahlungen / {level.supplierCount} Lief.</div>
                         </div>
                       </div>
                     ))}
                   </div>
                   {/* Überfällig gesamt */}
-                  <div className="mt-1.5 pt-1.5 border-t border-gray-100 flex items-center justify-between">
-                    <span className="text-[8px] font-medium text-brand-red uppercase">Überfällig gesamt</span>
+                  <div className="mt-2 pt-2 border-t border-gray-100 flex items-center justify-between">
+                    <span className="text-[10px] font-medium text-brand-red uppercase">Überfällig gesamt</span>
                     <div className="text-right">
-                      <div className="text-[12px] font-semibold text-brand-red">{fmtEur(dashOverdueTotal.total)}</div>
-                      <div className="text-[7px] text-gray-400">{dashOverdueTotal.count} Zahlungen</div>
+                      <div className="text-[13px] font-semibold text-brand-red">{fmtEur(dashOverdueTotal.total)}</div>
+                      <div className="text-[9px] text-gray-400">{dashOverdueTotal.count} Zahlungen</div>
                     </div>
                   </div>
                 </div>
 
                 {/* MIDDLE: Container Value - Shipped */}
-                <div className="bg-white rounded border border-gray-100 p-2 flex flex-col">
-                  <div className="text-[8px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-1.5">Container Value — Shipped</div>
+                <div className="bg-white rounded border border-gray-100 p-2.5 flex flex-col">
+                  <div className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-1.5">Container Value — Shipped</div>
                   <div className="flex-1 flex flex-col items-center justify-center">
-                    <div className="text-[7px] text-gray-400 mb-0.5">Warenwert aller verschifften Container</div>
-                    <div className="text-[18px] font-bold text-gray-900">{fmtEur(goodsStats.containerValue)}</div>
-                    <div className="text-[8px] text-gray-400 mt-0.5">{goodsStats.containerCount} Container unterwegs</div>
+                    <div className="text-[9px] text-gray-400 mb-0.5">Warenwert aller verschifften Container</div>
+                    <div className="text-[20px] font-bold text-gray-900">{fmtEur(goodsStats.containerValue)}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">{goodsStats.containerCount} Container unterwegs</div>
                   </div>
-                  <div className="mt-auto pt-1.5 border-t border-gray-100 flex items-center justify-between text-[8px]">
+                  <div className="mt-auto pt-1.5 border-t border-gray-100 flex items-center justify-between text-[10px]">
                     <span className="text-gray-400">Offener Restbetrag</span>
                     <span className="font-medium text-amber-600">{fmtEur(goodsStats.containerValue - goodsStats.depositPaid)}</span>
                   </div>
                 </div>
 
                 {/* RIGHT: Shipped - Deposit Value PAID */}
-                <div className="bg-white rounded border border-gray-100 p-2 flex flex-col">
-                  <div className="text-[8px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-1.5">Shipped — Deposit Value PAID</div>
+                <div className="bg-white rounded border border-gray-100 p-2.5 flex flex-col">
+                  <div className="text-[10px] font-medium text-gray-500 uppercase tracking-[0.4px] mb-1.5">Shipped — Deposit Value PAID</div>
                   <div className="flex-1 flex flex-col items-center justify-center">
-                    <div className="text-[7px] text-gray-400 mb-0.5">Geleistete Anzahlungen für verschiffte Ware</div>
-                    <div className="text-[18px] font-bold text-emerald-600">{fmtEur(goodsStats.depositPaid)}</div>
-                    <div className="text-[8px] text-gray-400 mt-0.5">
+                    <div className="text-[9px] text-gray-400 mb-0.5">Geleistete Anzahlungen für verschiffte Ware</div>
+                    <div className="text-[20px] font-bold text-emerald-600">{fmtEur(goodsStats.depositPaid)}</div>
+                    <div className="text-[10px] text-gray-400 mt-0.5">
                       {goodsStats.containerValue > 0
                         ? `${Math.round((goodsStats.depositPaid / goodsStats.containerValue) * 100)}% des Warenwerts`
                         : "—"}
                     </div>
                   </div>
-                  <div className="mt-auto pt-1.5 border-t border-gray-100 flex items-center justify-between text-[8px]">
+                  <div className="mt-auto pt-1.5 border-t border-gray-100 flex items-center justify-between text-[10px]">
                     <span className="text-gray-400">Warenwert gesamt</span>
                     <span className="font-medium text-gray-700">{fmtEur(goodsStats.containerValue)}</span>
                   </div>

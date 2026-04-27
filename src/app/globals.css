@@ -43,36 +43,37 @@ body {
 }
 
 /*
- * Responsive scaling via CSS zoom on the root element.
+ * Responsive scaling via CSS zoom on html.
+ * Base zoom 1.25 applies to ALL screens — the original design was built too
+ * compact (8-11px text). Each breakpoint adds more for larger monitors.
  *
- * Base design targets 14" laptop (~1366px effective viewport).
- * zoom on html scales ALL px-based sizes (text, sidebar, icons, gaps)
- * proportionally, and viewport units (vh/vw) stay correct.
- *
- * Breakpoints (effective viewport width):
- *   < 1440px  →  1.0   (compact 14" base)
- *   ≥ 1440px  →  1.15  (14" FHD native / 15" laptops)
- *   ≥ 1680px  →  1.35  (medium desktop monitors)
- *   ≥ 1920px  →  1.55  (24" FHD — comfortable reading)
- *   ≥ 2400px  →  1.8   (27" QHD)
- *   ≥ 3200px  →  2.1   (4K / large ultrawide)
+ *  All screens  →  1.25  (14" laptop — text goes from 10px→12.5px, 9px→11.25px)
+ *  ≥ 1440px     →  1.35  (14" FHD native / 15" laptops)
+ *  ≥ 1680px     →  1.55  (medium desktop)
+ *  ≥ 1920px     →  1.75  (24" FHD)
+ *  ≥ 2400px     →  2.1   (27" QHD)
+ *  ≥ 3200px     →  2.5   (4K)
  */
-@media (min-width: 1440px) {
-  html { zoom: 1.15; }
+html {
+  zoom: 1.25;
 }
 
-@media (min-width: 1680px) {
+@media (min-width: 1440px) {
   html { zoom: 1.35; }
 }
 
-@media (min-width: 1920px) {
+@media (min-width: 1680px) {
   html { zoom: 1.55; }
 }
 
+@media (min-width: 1920px) {
+  html { zoom: 1.75; }
+}
+
 @media (min-width: 2400px) {
-  html { zoom: 1.8; }
+  html { zoom: 2.1; }
 }
 
 @media (min-width: 3200px) {
-  html { zoom: 2.1; }
+  html { zoom: 2.5; }
 }
