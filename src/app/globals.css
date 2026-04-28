@@ -44,15 +44,14 @@ body {
 
 /*
  * Responsive scaling via CSS zoom on html.
- * Base zoom 1.25 applies to ALL screens — the original design was built too
- * compact (8-11px text). Each breakpoint adds more for larger monitors.
+ * Base zoom 1.25 applies to ALL screens.
  *
- *  All screens  →  1.25  (14" laptop — text goes from 10px→12.5px, 9px→11.25px)
- *  ≥ 1440px     →  1.35  (14" FHD native / 15" laptops)
- *  ≥ 1680px     →  1.55  (medium desktop)
- *  ≥ 1920px     →  1.75  (24" FHD)
- *  ≥ 2400px     →  2.1   (27" QHD)
- *  ≥ 3200px     →  2.5   (4K)
+ *  All screens  ->  1.25  (14" laptop)
+ *  >= 1440px    ->  1.35  (14" FHD native / 15" laptops)
+ *  >= 1680px    ->  1.55  (medium desktop)
+ *  >= 1920px    ->  1.75  (24" FHD)
+ *  >= 2400px    ->  2.1   (27" QHD)
+ *  >= 3200px    ->  2.5   (4K)
  */
 html {
   zoom: 1.25;
