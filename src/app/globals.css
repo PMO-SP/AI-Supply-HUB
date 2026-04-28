@@ -42,15 +42,38 @@ body {
   background-color: #f9fafb !important;
 }
 
-/* Scale down for small screens (14" laptops ~1366x768 or 1920x1080 at 125% scaling) */
-@media (max-height: 800px) {
-  html {
-    font-size: 14px;
-  }
+/*
+ * Responsive scaling via CSS zoom on html.
+ * Base zoom 1.25 applies to ALL screens — the original design was built too
+ * compact (8-11px text). Each breakpoint adds more for larger monitors.
+ *
+ *  All screens  →  1.25  (14" laptop — text goes from 10px→12.5px, 9px→11.25px)
+ *  ≥ 1440px     →  1.35  (14" FHD native / 15" laptops)
+ *  ≥ 1680px     →  1.55  (medium desktop)
+ *  ≥ 1920px     →  1.75  (24" FHD)
+ *  ≥ 2400px     →  2.1   (27" QHD)
+ *  ≥ 3200px     →  2.5   (4K)
+ */
+html {
+  zoom: 1.25;
 }
 
-@media (max-height: 700px) {
-  html {
-    font-size: 13px;
-  }
+@media (min-width: 1440px) {
+  html { zoom: 1.35; }
+}
+
+@media (min-width: 1680px) {
+  html { zoom: 1.55; }
+}
+
+@media (min-width: 1920px) {
+  html { zoom: 1.75; }
+}
+
+@media (min-width: 2400px) {
+  html { zoom: 2.1; }
+}
+
+@media (min-width: 3200px) {
+  html { zoom: 2.5; }
 }
